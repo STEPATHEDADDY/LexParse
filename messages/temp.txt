@@ -1,0 +1,29 @@
+LIST:
+
+|	LIST CORRECT
+;
+
+CORRECT:
+	SENTENCE { 
+		printf("Correct!\n");
+		printNode($$);
+	}
+;
+
+SENTENCE:
+	SUBJECT PREDICATE END_PUNCT	{ $$ = makeNode($1, $2, 3); }
+;
+
+SUBJECT:			
+	NOUN	{ $$ = makeNode($1, NULL, 3);}
+;
+
+PREDICATE:
+	VERB	{ $$ = makeNode($1, NULL, 2); }
+|	VERB DIR_OBJ	{ $$ = makeNode($1, $2, 2);}
+;
+
+DIR_OBJ:
+	ARTICLE NOUN { $$ = makeNode($1, $2, 1); }
+;
+
