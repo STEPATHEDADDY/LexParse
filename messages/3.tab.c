@@ -99,22 +99,31 @@
 		return node;
 	}
 
-	void addSpaces (int count) {
+	void addSpaces (char symbol, int count) {
 		int i;
-		printf("\n");
-		for (i = 0; i < count * 5; i++)
+		for (i = 0; i < (count - 2) * 5; i++)
 		{
 			printf(" ");
+		}
+		if ((count - 1) > 0)
+		{
+			for (i = 0; i < 5; i++)
+			{
+				printf(KYEL "%c", symbol);
+			}
 		}
 	}
 
 	void printColorful(char *string)
 	{
 		char *color;
-			if ((string == "SUBJECT") || (string == "PREDICATE"))
-				color = KMAG;
+			if ((string == "TODOVERB") || (string == "SUBJECT") ||
+				(string == "PREDICATE") || (string == "SENTENCE") ||
+				(string == "QUESTION") || (string == "DIR_OBJ") ||
+				(string == "SPECWORD") || (string == "SPECQUESTION"))
+				color = KBLU;
 			else if ((string == "NOUN") || (string == "VERB") ||
-				(string == "DIR_OBJ") || (string == "ARTICLE"))
+				(string == "ARTICLE"))
 				color = KWHT;
 				else color = KCYN;
 			printf("%s%s ", color, string);
@@ -123,14 +132,11 @@
 
 	void printNode (struct Node* node, int deep) {
 		if (node == NULL) return;
-		//printf("(");
-		addSpaces(deep);
+		addSpaces('-', deep);
 		printColorful(node->nodeType);
+		printf("\n");
 		printNode(node->leftOperand, deep + 1);
-		//printf("%i", node->nodeType);
 		printNode(node->rightOperand, deep + 1);
-		//addSpaces(deep);
-		//printf("\n");
 		return;
 	}
 
@@ -149,7 +155,6 @@
 		if (node->leftOperand != NULL)
 		{
 			pointers[j] = node->leftOperand->nodeType;
-			printf("\t");
 			for (i = 0; i < k; i++)
 			{
 				printColorful(pointers[i]);
@@ -169,12 +174,10 @@
 			isEnd = 1;
 		}
 		if (node == NULL) return;
-		//pointers = realloc(pointers, sizeof(char*) * (j - position));
 		printLALRParsing(node->leftOperand, position);
 		printLALRParsing(node->rightOperand, position + 1);
 		if (node->leftOperand != NULL)
 		{	
-			printf("\t");
 			k -= j;
 			for (i = 0; i < k; i++)
 			{
@@ -194,16 +197,36 @@
 		pointers = malloc(k * sizeof(char));
 	}
 
-/*
-	TYPE:
-		1) DIROBJ
-		2) PREDICATE
-		3) SUBJECT
-		4) SENTENCE
-*/
+	void doTreeOperations(struct Node* node)
+	{
+		printf(KWHT "\nCorrect!\n");
 
+		printf("\n");
 
-#line 207 "3.tab.c" /* yacc.c:339  */
+		k = 1;
+		j = 0; 
+		printf("AST:\n");
+		printNode(node, 1);
+		printf("\n");
+
+		struct Node *root;
+		root = makeNode(node, NULL, "ROOT");
+		initializePointers();
+
+		printf(KWHT "TDPARSE:\n");
+		isEnd = 0;
+		printTDParsing(root);
+
+		printf(KWHT "\n\nLALRPARSE:\n");
+		j = 0;
+		printLALRParsing(root, 0);
+
+		free(pointers);
+
+		printf(KWHT "\n");
+	}
+
+#line 230 "3.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -241,7 +264,9 @@ extern int yydebug;
     END_PUNCT = 258,
     ARTICLE = 259,
     NOUN = 260,
-    VERB = 261
+    VERB = 261,
+    TODOVERB = 262,
+    SPECWORD = 263
   };
 #endif
 
@@ -250,12 +275,12 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 142 "3.y" /* yacc.c:355  */
+#line 165 "3.y" /* yacc.c:355  */
 
 	char *string;
 	struct Node *Tree;
 
-#line 259 "3.tab.c" /* yacc.c:355  */
+#line 284 "3.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -272,7 +297,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 276 "3.tab.c" /* yacc.c:358  */
+#line 301 "3.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -514,21 +539,21 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   7
+#define YYLAST   11
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  7
+#define YYNTOKENS  9
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  7
+#define YYNNTS  9
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  9
+#define YYNRULES  13
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  13
+#define YYNSTATES  19
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   261
+#define YYMAXUTOK   263
 
 #define YYTRANSLATE(YYX)                                                \
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -563,14 +588,15 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6
+       5,     6,     7,     8
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   158,   158,   160,   164,   172,   191,   202,   208,   219
+       0,   185,   185,   187,   191,   194,   197,   203,   212,   221,
+     227,   237,   243,   252
 };
 #endif
 
@@ -580,8 +606,8 @@ static const yytype_uint8 yyrline[] =
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "END_PUNCT", "ARTICLE", "NOUN", "VERB",
-  "$accept", "LIST", "CORRECT", "SENTENCE", "SUBJECT", "PREDICATE",
-  "DIR_OBJ", YY_NULLPTR
+  "TODOVERB", "SPECWORD", "$accept", "LIST", "CORRECT", "SPECQUESTION",
+  "QUESTION", "SENTENCE", "SUBJECT", "PREDICATE", "DIR_OBJ", YY_NULLPTR
 };
 #endif
 
@@ -590,7 +616,7 @@ static const char *const yytname[] =
    (internal) symbol number NUM (which must be that of a token).  */
 static const yytype_uint16 yytoknum[] =
 {
-       0,   256,   257,   258,   259,   260,   261
+       0,   256,   257,   258,   259,   260,   261,   262,   263
 };
 # endif
 
@@ -608,8 +634,8 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -6,     0,    -6,    -6,    -6,    -6,    -5,    -2,     1,     2,
-      -6,    -6,    -6
+      -6,     0,    -6,    -6,    -4,    -5,    -6,    -6,    -6,    -6,
+      -3,    -6,    -6,     2,     1,     4,    -6,    -6,    -6
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -617,20 +643,20 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       2,     0,     1,     6,     3,     4,     0,     7,     0,     0,
-       8,     5,     9
+       2,     0,     1,    10,     0,     0,     3,     6,     5,     4,
+       0,     8,     7,    11,     0,     0,    12,     9,    13
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -6,    -6,    -6,    -6,    -6,    -6,    -6
+      -6,    -6,    -6,    -6,     5,     7,    -6,    -6,    -6
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     1,     4,     5,     6,     8,    10
+      -1,     1,     6,     7,     8,     9,    10,    14,    16
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -638,32 +664,36 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
-       2,     7,     9,     0,    11,     3,     0,    12
+       2,     3,     4,    13,    17,     3,    15,     4,     5,    18,
+      12,    11
 };
 
-static const yytype_int8 yycheck[] =
+static const yytype_uint8 yycheck[] =
 {
-       0,     6,     4,    -1,     3,     5,    -1,     5
+       0,     5,     7,     6,     3,     5,     4,     7,     8,     5,
+       5,     4
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     8,     0,     5,     9,    10,    11,     6,    12,     4,
-      13,     3,     5
+       0,    10,     0,     5,     7,     8,    11,    12,    13,    14,
+      15,    14,    13,     6,    16,     4,    17,     3,     5
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,     7,     8,     8,     9,    10,    11,    12,    12,    13
+       0,     9,    10,    10,    11,    11,    11,    12,    13,    14,
+      15,    16,    16,    17
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     0,     2,     1,     3,     1,     1,     2,     2
+       0,     2,     0,     2,     1,     1,     1,     2,     2,     3,
+       1,     1,     2,     2
 };
 
 
@@ -1340,92 +1370,107 @@ yyreduce:
   switch (yyn)
     {
         case 4:
-#line 164 "3.y" /* yacc.c:1646  */
+#line 191 "3.y" /* yacc.c:1646  */
     { 
-		printf(KWHT "\nCorrect!\n");
-		free(pointers);
-		//printNode($1);
+		doTreeOperations((yyvsp[0].Tree));
 	}
-#line 1350 "3.tab.c" /* yacc.c:1646  */
+#line 1378 "3.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 172 "3.y" /* yacc.c:1646  */
-    { 
-		(yyval.Tree) = makeNode((yyvsp[-2].Tree), (yyvsp[-1].Tree), "SENTENCE"); 
-		printf("\n");
-		printNode((yyval.Tree), 1);
-		printf("\n");
-
-		struct Node *root;
-		root = makeNode((yyval.Tree), NULL, "ROOT");
-		initializePointers();
-		printf(KWHT "TDPARSE:\n\t");
-		printTDParsing(root);
-
-		printf("\n\nLALRPARSE:\n");
-		j = 0;
-		printLALRParsing(root, 0);
+#line 194 "3.y" /* yacc.c:1646  */
+    {
+		doTreeOperations((yyvsp[0].Tree));
 	}
-#line 1371 "3.tab.c" /* yacc.c:1646  */
+#line 1386 "3.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 191 "3.y" /* yacc.c:1646  */
+#line 197 "3.y" /* yacc.c:1646  */
+    {
+		doTreeOperations((yyvsp[0].Tree));
+	}
+#line 1394 "3.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 7:
+#line 203 "3.y" /* yacc.c:1646  */
+    {
+		struct Node *lval, *specword;
+		lval = makeSimpleNode((yyvsp[-1].string));
+		specword = makeNode(lval, NULL, "SPECWORD");
+		(yyval.Tree) = makeNode(specword, (yyvsp[0].Tree), "SPECQUESTION");
+	}
+#line 1405 "3.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 8:
+#line 212 "3.y" /* yacc.c:1646  */
+    {
+		struct Node *lval, *todoverb;
+		lval = makeSimpleNode((yyvsp[-1].string));
+		todoverb = makeNode(lval, NULL, "TODOVERB");
+		(yyval.Tree) = makeNode(todoverb, (yyvsp[0].Tree), "QUESTION");
+	}
+#line 1416 "3.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 9:
+#line 221 "3.y" /* yacc.c:1646  */
+    { 
+		(yyval.Tree) = makeNode((yyvsp[-2].Tree), (yyvsp[-1].Tree), "SENTENCE"); 
+	}
+#line 1424 "3.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 10:
+#line 227 "3.y" /* yacc.c:1646  */
     {	
 		struct Node *lval, *noun;
 		lval = makeSimpleNode((yyvsp[0].string));
 		noun = makeNode(lval, NULL, "NOUN");
 		(yyval.Tree) = makeNode(noun, NULL, "SUBJECT");
-		//printf("%s\n", $1);
 	}
-#line 1383 "3.tab.c" /* yacc.c:1646  */
+#line 1435 "3.tab.c" /* yacc.c:1646  */
     break;
 
-  case 7:
-#line 202 "3.y" /* yacc.c:1646  */
+  case 11:
+#line 237 "3.y" /* yacc.c:1646  */
     {
 		struct Node *lval, *verb;
 		lval = makeSimpleNode((yyvsp[0].string));
 		verb = makeNode(lval, NULL, "VERB");
 		(yyval.Tree) = makeNode(verb, NULL, "PREDICATE");
 	}
-#line 1394 "3.tab.c" /* yacc.c:1646  */
+#line 1446 "3.tab.c" /* yacc.c:1646  */
     break;
 
-  case 8:
-#line 208 "3.y" /* yacc.c:1646  */
+  case 12:
+#line 243 "3.y" /* yacc.c:1646  */
     {	
 		struct Node *lval, *verb;
 		lval = makeSimpleNode((yyvsp[-1].string));
 		verb = makeNode(lval, NULL, "VERB");
 		(yyval.Tree) = makeNode(verb, (yyvsp[0].Tree), "PREDICATE"); 
-		//printf("%s\n", $1);
-		//printf("%s\n", $2);
 	}
-#line 1407 "3.tab.c" /* yacc.c:1646  */
+#line 1457 "3.tab.c" /* yacc.c:1646  */
     break;
 
-  case 9:
-#line 219 "3.y" /* yacc.c:1646  */
+  case 13:
+#line 252 "3.y" /* yacc.c:1646  */
     { 
-		//$1 = makeNode(NULL, NULL, "ARTICLE");
-		//$2 = makeNode(NULL, NULL, "NOUN");
 		struct Node *lval, *rval, *article, *noun;
 		lval = makeSimpleNode((yyvsp[-1].string));
 		rval = makeSimpleNode((yyvsp[0].string));
 		article = makeNode(lval, NULL, "ARTICLE");
 		noun = makeNode(rval, NULL, "NOUN");
 		(yyval.Tree) = makeNode(article, noun, "DIR_OBJ");
-		//printf("%s ", $1);
-		//printf("%s\n", $2);
-		//printNode($$, 1);
 	}
-#line 1425 "3.tab.c" /* yacc.c:1646  */
+#line 1470 "3.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1429 "3.tab.c" /* yacc.c:1646  */
+#line 1474 "3.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1653,5 +1698,5 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 234 "3.y" /* yacc.c:1906  */
+#line 262 "3.y" /* yacc.c:1906  */
 

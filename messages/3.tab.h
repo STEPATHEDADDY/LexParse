@@ -48,7 +48,9 @@ extern int yydebug;
     END_PUNCT = 258,
     ARTICLE = 259,
     NOUN = 260,
-    VERB = 261
+    VERB = 261,
+    TODOVERB = 262,
+    SPECWORD = 263
   };
 #endif
 
@@ -57,12 +59,12 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 142 "3.y" /* yacc.c:1909  */
+#line 165 "3.y" /* yacc.c:1909  */
 
 	char *string;
 	struct Node *Tree;
 
-#line 66 "3.tab.h" /* yacc.c:1909  */
+#line 68 "3.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

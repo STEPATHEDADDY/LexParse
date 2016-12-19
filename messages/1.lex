@@ -25,8 +25,17 @@
 	return VERB;
 }
 
+(?i:do|does|did) {
+	yylval.string = strdup(yytext);
+	return TODOVERB;
+}
+
+(?i:why|what|when|how) {
+	yylval.string = strdup(yytext);
+	return SPECWORD;
+}
+
 [.!?]+ {
-	printf("ENDPUNCT\n");
 	return END_PUNCT;
 }
 

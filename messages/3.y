@@ -34,22 +34,31 @@
 		return node;
 	}
 
-	void addSpaces (int count) {
+	void addSpaces (char symbol, int count) {
 		int i;
-		printf("\n");
-		for (i = 0; i < count * 5; i++)
+		for (i = 0; i < (count - 2) * 5; i++)
 		{
 			printf(" ");
+		}
+		if ((count - 1) > 0)
+		{
+			for (i = 0; i < 5; i++)
+			{
+				printf(KYEL "%c", symbol);
+			}
 		}
 	}
 
 	void printColorful(char *string)
 	{
 		char *color;
-			if ((string == "SUBJECT") || (string == "PREDICATE"))
-				color = KMAG;
+			if ((string == "TODOVERB") || (string == "SUBJECT") ||
+				(string == "PREDICATE") || (string == "SENTENCE") ||
+				(string == "QUESTION") || (string == "DIR_OBJ") ||
+				(string == "SPECWORD") || (string == "SPECQUESTION"))
+				color = KBLU;
 			else if ((string == "NOUN") || (string == "VERB") ||
-				(string == "DIR_OBJ") || (string == "ARTICLE"))
+				(string == "ARTICLE"))
 				color = KWHT;
 				else color = KCYN;
 			printf("%s%s ", color, string);
@@ -58,14 +67,11 @@
 
 	void printNode (struct Node* node, int deep) {
 		if (node == NULL) return;
-		//printf("(");
-		addSpaces(deep);
+		addSpaces('-', deep);
 		printColorful(node->nodeType);
+		printf("\n");
 		printNode(node->leftOperand, deep + 1);
-		//printf("%i", node->nodeType);
 		printNode(node->rightOperand, deep + 1);
-		//addSpaces(deep);
-		//printf("\n");
 		return;
 	}
 
@@ -84,7 +90,6 @@
 		if (node->leftOperand != NULL)
 		{
 			pointers[j] = node->leftOperand->nodeType;
-			printf("\t");
 			for (i = 0; i < k; i++)
 			{
 				printColorful(pointers[i]);
@@ -104,12 +109,10 @@
 			isEnd = 1;
 		}
 		if (node == NULL) return;
-		//pointers = realloc(pointers, sizeof(char*) * (j - position));
 		printLALRParsing(node->leftOperand, position);
 		printLALRParsing(node->rightOperand, position + 1);
 		if (node->leftOperand != NULL)
 		{	
-			printf("\t");
 			k -= j;
 			for (i = 0; i < k; i++)
 			{
@@ -129,14 +132,34 @@
 		pointers = malloc(k * sizeof(char));
 	}
 
-/*
-	TYPE:
-		1) DIROBJ
-		2) PREDICATE
-		3) SUBJECT
-		4) SENTENCE
-*/
+	void doTreeOperations(struct Node* node)
+	{
+		printf(KWHT "\nCorrect!\n");
 
+		printf("\n");
+
+		k = 1;
+		j = 0; 
+		printf("AST:\n");
+		printNode(node, 1);
+		printf("\n");
+
+		struct Node *root;
+		root = makeNode(node, NULL, "ROOT");
+		initializePointers();
+
+		printf(KWHT "TDPARSE:\n");
+		isEnd = 0;
+		printTDParsing(root);
+
+		printf(KWHT "\n\nLALRPARSE:\n");
+		j = 0;
+		printLALRParsing(root, 0);
+
+		free(pointers);
+
+		printf(KWHT "\n");
+	}
 %}
 
 %union {
@@ -147,10 +170,14 @@
 %token <string> ARTICLE
 %token <string> NOUN
 %token <string> VERB
+%token <string> TODOVERB
+%token <string> SPECWORD
 %type <Tree> DIR_OBJ
 %type <Tree> SUBJECT
 %type <Tree> PREDICATE
 %type <Tree> SENTENCE
+%type <Tree> QUESTION
+%type <Tree> SPECQUESTION
 %start LIST
 	
 %%
@@ -162,28 +189,37 @@ LIST:
 
 CORRECT:
 	SENTENCE { 
-		printf(KWHT "\nCorrect!\n");
-		free(pointers);
-		//printNode($1);
+		doTreeOperations($1);
+	}
+|	QUESTION {
+		doTreeOperations($1);
+	}
+|	SPECQUESTION {
+		doTreeOperations($1);
+	}
+;
+
+SPECQUESTION:
+	SPECWORD QUESTION {
+		struct Node *lval, *specword;
+		lval = makeSimpleNode($1);
+		specword = makeNode(lval, NULL, "SPECWORD");
+		$$ = makeNode(specword, $2, "SPECQUESTION");
+	}
+;
+
+QUESTION:
+	TODOVERB SENTENCE {
+		struct Node *lval, *todoverb;
+		lval = makeSimpleNode($1);
+		todoverb = makeNode(lval, NULL, "TODOVERB");
+		$$ = makeNode(todoverb, $2, "QUESTION");
 	}
 ;
 
 SENTENCE:
 	SUBJECT PREDICATE END_PUNCT	{ 
 		$$ = makeNode($1, $2, "SENTENCE"); 
-		printf("\n");
-		printNode($$, 1);
-		printf("\n");
-
-		struct Node *root;
-		root = makeNode($$, NULL, "ROOT");
-		initializePointers();
-		printf(KWHT "TDPARSE:\n\t");
-		printTDParsing(root);
-
-		printf("\n\nLALRPARSE:\n");
-		j = 0;
-		printLALRParsing(root, 0);
 	}
 ;
 
@@ -193,7 +229,6 @@ SUBJECT:
 		lval = makeSimpleNode($1);
 		noun = makeNode(lval, NULL, "NOUN");
 		$$ = makeNode(noun, NULL, "SUBJECT");
-		//printf("%s\n", $1);
 	}
 
 ;
@@ -210,24 +245,17 @@ PREDICATE:
 		lval = makeSimpleNode($1);
 		verb = makeNode(lval, NULL, "VERB");
 		$$ = makeNode(verb, $2, "PREDICATE"); 
-		//printf("%s\n", $1);
-		//printf("%s\n", $2);
 	}
 ;
 
 DIR_OBJ:
 	ARTICLE NOUN { 
-		//$1 = makeNode(NULL, NULL, "ARTICLE");
-		//$2 = makeNode(NULL, NULL, "NOUN");
 		struct Node *lval, *rval, *article, *noun;
 		lval = makeSimpleNode($1);
 		rval = makeSimpleNode($2);
 		article = makeNode(lval, NULL, "ARTICLE");
 		noun = makeNode(rval, NULL, "NOUN");
 		$$ = makeNode(article, noun, "DIR_OBJ");
-		//printf("%s ", $1);
-		//printf("%s\n", $2);
-		//printNode($$, 1);
 	}
 ;
 
